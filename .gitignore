@@ -1,0 +1,16 @@
+/bin
+/build
+/classes
+/src/main/webapp/WEB-INF/lib
+/src/main/java/com/unieins/happy/Credentials.java
+/.settings
+/WEB-INF
+/gradle*
+.gradle
+.project
+.classpath
+/war/WEB-INF/classes
+endpoint-libs
+/war/WEB-INF/deploy
+/war/node_modules
+/war/Gulp Watch.bat

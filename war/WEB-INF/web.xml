@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><web-app xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.5" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee                http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
+
+  <!-- Servlets -->
+
+  
+  <!-- Default page to serve -->
+  <welcome-file-list>
+    <welcome-file>courses.html</welcome-file>
+  </welcome-file-list>
+
+  <servlet>
+    <servlet-name>SystemServiceServlet</servlet-name>
+    <servlet-class>com.google.api.server.spi.SystemServiceServlet</servlet-class>
+    <init-param>
+      <param-name>services</param-name>
+      <param-value>com.unieins.happy.happiness.HapinessEndpoint,com.unieins.happy.project.ProjectEndpoint,com.unieins.happy.project.StandupEndpoint,com.unieins.happy.teaching.TeachingTermEndpoint,com.unieins.happy.user.UserEndpoint</param-value>
+    </init-param>
+  </servlet>
+  
+  <servlet>
+    <servlet-name>_ah_warmup</servlet-name>
+    <servlet-class>com.unieins.happy.servlet.WarmupServlet</servlet-class>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>SystemServiceServlet</servlet-name>
+    <url-pattern>/_ah/spi/*</url-pattern>
+  </servlet-mapping>
+  
+  <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>uni1</web-resource-name>
+            <url-pattern>/*</url-pattern>
+        </web-resource-collection>
+        <user-data-constraint>
+            <transport-guarantee>CONFIDENTIAL</transport-guarantee>
+        </user-data-constraint>
+    </security-constraint>
+
+</web-app>
