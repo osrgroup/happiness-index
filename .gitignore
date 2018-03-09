@@ -14,3 +14,7 @@ endpoint-libs
 /war/WEB-INF/deploy
 /war/node_modules
 /war/Gulp Watch.bat
+/war/dist/js/project-dashboard.dist.js
+/war/dist/js/projects.dist.js
+/war/dist/js/admin.dist.js
+/war/dist/js/courses.dist.js
