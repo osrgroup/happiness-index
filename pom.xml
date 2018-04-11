@@ -332,6 +332,16 @@
 					<filtering>true</filtering>
 					<targetPath>components/bootstrap</targetPath>
 				</resource>
+				<resource>
+					<directory>war/components/add-input-area</directory>
+					<filtering>true</filtering>
+					<targetPath>components/add-input-area</targetPath>
+				</resource>
+				<resource>
+					<directory>war/components/datetimepicker</directory>
+					<filtering>true</filtering>
+					<targetPath>components/datetimepicker</targetPath>
+				</resource>
 				
 				<resource>
 					<directory>war/assets/img</directory>
