@@ -16,20 +16,26 @@ public class TeachingTerm {
 	@PrimaryKey
 	@Persistent(valueStrategy = IdGeneratorStrategy.IDENTITY)
 	Long id;
-	
+
 	@Persistent
 	String label;
-	
+
 	@Persistent
 	String standupArchiveEmail;
-	
+
+	@Persistent
+	String institution;
+
 	@Persistent
 	@Element(dependent = "true")
 	List<Sprint> sprintDeadlines;
-	
+
 	@Persistent
 	Boolean joinable;
-	
+
+	@Persistent
+	Boolean archived;
+
 	public Long getId() {
 		return id;
 	}
@@ -62,6 +68,22 @@ public class TeachingTerm {
 		this.joinable = joinable;
 	}
 
+	public Boolean getArchived() {
+		return archived;
+	}
+
+	public void setArchived(Boolean archived) {
+		this.archived = archived;
+	}
+
+	public String getInstitution() {
+		return institution;
+	}
+
+	public void setInstitution(String institution) {
+		this.institution = institution;
+	}
+
 	public String getStandupArchiveEmail() {
 		return standupArchiveEmail;
 	}
@@ -69,6 +91,6 @@ public class TeachingTerm {
 	public void setStandupArchiveEmail(String standupArchiveEmail) {
 		this.standupArchiveEmail = standupArchiveEmail;
 	}
-	
-	
+
+
 }

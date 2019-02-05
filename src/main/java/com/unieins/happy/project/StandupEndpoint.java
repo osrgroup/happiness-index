@@ -53,7 +53,7 @@ public class StandupEndpoint {
 	 */
 	@SuppressWarnings({ "unchecked", "unused" })
 	@ApiMethod(name = "listStandup", scopes = {Constants.EMAIL_SCOPE},
-			clientIds = {Constants.WEB_CLIENT_ID, 
+			clientIds = {Constants.WEB_CLIENT_ID,
 		     com.google.api.server.spi.Constant.API_EXPLORER_CLIENT_ID},
 		     audiences = {Constants.WEB_CLIENT_ID})
 	public List<StandupStats> listStandup(
@@ -66,7 +66,7 @@ public class StandupEndpoint {
 		PersistenceManager mgr = null;
 		Cursor cursor = null;
 		List<Standup> execute = null;
-		
+
 		List<StandupStats> statsList = new ArrayList<StandupStats>();
 
 		try {
@@ -82,7 +82,7 @@ public class StandupEndpoint {
 			if (limit != null) {
 				query.setRange(0, limit);
 			}
-			
+
 			query.setFilter("projectId == "+ projectID);
 
 			execute = (List<Standup>) query.execute();
@@ -90,26 +90,26 @@ public class StandupEndpoint {
 			if (cursor != null)
 				cursorString = cursor.toWebSafeString();
 
-			
-			
-			
+
+
+
 			UserEndpoint ue = new UserEndpoint();
-			
+
 			List<User> projectMembers = ue.listUser(null, null, projectID, user);
-			
+
 			TeachingTermEndpoint tte = new TeachingTermEndpoint();
 			Integer sprintNumber = tte.getCurrentSprint(teachingTerm).getSprintNumber();
-			
-			
-			
+
+
+
 			for (int i = 1; i <= sprintNumber; i++) {
 				HashMap<String, Integer> standupCount = new HashMap<String, Integer>();
-				
+
 				// Initialize for all project members (some may not have submitted any standup emails, those will remain 0.
 				for (User projectMember : projectMembers) {
 					standupCount.put(projectMember.getId(), 0);
 				}
-				
+
 				// count number of standup emails
 				for (Standup standup : execute){
 					if (standup.getSprintNumber() != null && standup.getSprintNumber() == i && standup.getUserId() != null){
@@ -118,30 +118,30 @@ public class StandupEndpoint {
 						standupCount.put(standup.getUserId(), oldCount + 1);
 					}
 				}
-				
+
 				StandupStats stats = new StandupStats();
 				stats.setSprintNumber(i);
-				
+
 				for (User projectMember : projectMembers) {
 					Integer usersStandupCount = standupCount.get(projectMember.getId());
-					
+
 					stats.addStandupStat(projectMember.getId(), projectMember.getGivenName() + " " + projectMember.getSurName(), usersStandupCount);
 				}
-				
+
 				statsList.add(stats);
-				
+
 			}
-			
+
 		} finally {
 			mgr.close();
 		}
 
 		return statsList;
 	}
-	
+
 	@SuppressWarnings({ "unchecked", "unused" })
 	@ApiMethod(name = "listStandupMessages",  path = "standupList", scopes = {Constants.EMAIL_SCOPE},
-			clientIds = {Constants.WEB_CLIENT_ID, 
+			clientIds = {Constants.WEB_CLIENT_ID,
 		     com.google.api.server.spi.Constant.API_EXPLORER_CLIENT_ID},
 		     audiences = {Constants.WEB_CLIENT_ID})
 	public List<Standup> listStandupMessages(
@@ -153,7 +153,7 @@ public class StandupEndpoint {
 		PersistenceManager mgr = null;
 		Cursor cursor = null;
 		List<Standup> execute = null;
-		
+
 
 		try {
 			mgr = getPersistenceManager();
@@ -168,7 +168,7 @@ public class StandupEndpoint {
 			if (limit != null) {
 				query.setRange(0, limit);
 			}
-			
+
 			query.setFilter("projectId == "+ projectID);
 
 			execute = (List<Standup>) query.execute();
@@ -176,7 +176,7 @@ public class StandupEndpoint {
 			if (cursor != null)
 				cursorString = cursor.toWebSafeString();
 
-			
+
 		} finally {
 			mgr.close();
 		}
@@ -209,43 +209,43 @@ public class StandupEndpoint {
 	 *
 	 * @param standup the entity to be inserted.
 	 * @return The inserted entity.
-	 * @throws MessagingException 
-	 * @throws UnsupportedEncodingException 
-	 * @throws JSONException 
-	 * @throws UnauthorizedException 
+	 * @throws MessagingException
+	 * @throws UnsupportedEncodingException
+	 * @throws JSONException
+	 * @throws UnauthorizedException
 	 */
 	@ApiMethod(name = "insertStandup",  scopes = {Constants.EMAIL_SCOPE},
-			clientIds = {Constants.WEB_CLIENT_ID, 
+			clientIds = {Constants.WEB_CLIENT_ID,
 		     com.google.api.server.spi.Constant.API_EXPLORER_CLIENT_ID},
 		     audiences = {Constants.WEB_CLIENT_ID})
 	public Standup insertStandup(Standup standup, com.google.appengine.api.users.User user) throws UnsupportedEncodingException, MessagingException, JSONException, UnauthorizedException {
 
-		Project project = (new ProjectEndpoint()).getProject(standup.getProjectId());
-		
+		Project project = (new ProjectEndpoint()).getProject(standup.getProjectId(), user);
+
 		Authorization.isUserProjectMember(user, project);
-		
-		
-		
+
+
+
 		PersistenceManager mgr = getPersistenceManager();
 		try {
 			if ((standup.getId() != null) && containsStandup(standup)) {
 				throw new EntityExistsException("Object already exists");
 			}
-			
+
 			com.unieins.happy.user.User u1User = mgr.getObjectById(com.unieins.happy.user.User.class, user.getUserId());
 			standup.setUserId(user.getUserId());
 			standup.setUserName(u1User.getGivenName() + " " + u1User.getSurName());
 			sendStandupEmail(standup, user);
-			
+
 			mgr.makePersistent(standup);
 		} finally {
 			mgr.close();
 		}
 		return standup;
 	}
-	
+
 	public void sendStandupEmail(Standup standup, com.google.appengine.api.users.User user) throws UnsupportedEncodingException, MessagingException, JSONException{
-		
+
 		Properties props = new Properties();
 		Session session = Session.getDefaultInstance(props, null);
 
@@ -254,33 +254,33 @@ public class StandupEndpoint {
 		msgBody +="<strong>I've done the following:</strong><br>";
 		msgBody += standup.getDone();
 		msgBody += "</p>";
-		
+
 		msgBody += "<p>";
 		msgBody +="<strong>What I'm planing:</strong><br>";
 		msgBody += standup.getPlan();
 		msgBody += "</p>";
-		
+
 		msgBody += "<p>";
 		msgBody +="<strong>These are my current challenges:</strong><br>";
 		msgBody += standup.getChallenges();
 		msgBody += "</p>";
-		
+
 		msgBody += "Aloha,<br>";
 		msgBody += (new UserEndpoint()).getCurrentUser(user).getGivenName();
-		
+
 		Sendgrid mail = new Sendgrid(Credentials.SENDGRID_USER ,Credentials.SENDGRID_PW);
 		ProjectEndpoint pe = new ProjectEndpoint();
-		Project project = pe.getProject(standup.getProjectId());
+		Project project = pe.getProject(standup.getProjectId(), user);
 
 		TeachingTermEndpoint tte = new TeachingTermEndpoint();
 		TeachingTerm teachingTerm = tte.getTeachingTerm(project.getTeachingTerm());
-		
-		
+
+
 		 // FIXME project number
-		mail.setTo(teachingTerm.getStandupArchiveEmail()).setFrom(user.getEmail()).setSubject("[AMOS Team "+project.getName().substring(0, 1)+"] Standup-Email " + standup.getUserName()).setText(" ").setHtml(msgBody);
+		mail.setTo(teachingTerm.getStandupArchiveEmail()).setFrom(user.getEmail()).setSubject("[AMOS Team "+project.getName()+"] Standup-Email " + standup.getUserName()).setText(" ").setHtml(msgBody);
 
 		List<User> userList = getProjectMembers(standup.getProjectId(), user);
-		
+
 		for (User projectMember : userList) {
 			Logger.getLogger("logger").log(Level.INFO, "adding " +  projectMember.getEmail());
 			String fullName = projectMember.getGivenName() + " " + projectMember.getSurName();
@@ -288,11 +288,11 @@ public class StandupEndpoint {
 			// fullName = fullName.replaceAll("ae", "ae").replaceAll("ae", "oe").replaceAll("ae", "ue");
 			mail.addTo(projectMember.getEmail()); // FIXME add name, but ASCII only
 		}
-		
+
 		mail.send();
 		Logger.getLogger("logger").log(Level.INFO,   mail.getServerResponse());
 	}
-	
+
 	private List<User> getProjectMembers(Long projectID, com.google.appengine.api.users.User user){
 		UserEndpoint userEndpoint = new UserEndpoint();
 		return userEndpoint.listUser(null, null, projectID, user);

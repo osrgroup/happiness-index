@@ -18,3 +18,6 @@ endpoint-libs
 /war/dist/js/projects.dist.js
 /war/dist/js/admin.dist.js
 /war/dist/js/courses.dist.js
+target
+babel-cache
+dist

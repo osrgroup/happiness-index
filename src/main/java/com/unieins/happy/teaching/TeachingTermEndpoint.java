@@ -41,19 +41,21 @@ public class TeachingTermEndpoint {
 	 *
 	 * @return A CollectionResponse class containing the list of all entities
 	 * persisted and a cursor to the next page.
-	 * @throws UnauthorizedException 
+	 * @throws UnauthorizedException
 	 */
 	@SuppressWarnings({ "unchecked", "unused" })
 	@ApiMethod(name = "listTeachingTerm",  scopes = {Constants.EMAIL_SCOPE},
-			clientIds = {Constants.WEB_CLIENT_ID, 
+			clientIds = {Constants.WEB_CLIENT_ID,
 		     com.google.api.server.spi.Constant.API_EXPLORER_CLIENT_ID},
 		     audiences = {Constants.WEB_CLIENT_ID})
 	public CollectionResponse<TeachingTerm> listTeachingTerm(
 			@Nullable @Named("cursor") String cursorString,
 			@Nullable @Named("limit") Integer limit,
+			@Nullable @Named("onlyNonArchived") Boolean onlyNonArchived,
+			@Nullable @Named("onlyArchived") Boolean onlyArchived,
 			User user) throws UnauthorizedException {
-		
-		Authorization.restrictToAdmin(user);
+
+		//Authorization.restrictToAdmin(user);
 
 		PersistenceManager mgr = null;
 		Cursor cursor = null;
@@ -62,6 +64,8 @@ public class TeachingTermEndpoint {
 		try {
 			mgr = getPersistenceManager();
 			Query query = mgr.newQuery(TeachingTerm.class);
+			if (onlyNonArchived != null && onlyNonArchived) query.setFilter("archived != "+ true);
+			if (onlyArchived != null && onlyArchived) query.setFilter("archived == "+ true);
 			if (cursorString != null && cursorString != "") {
 				cursor = Cursor.fromWebSafeString(cursorString);
 				HashMap<String, Object> extensionMap = new HashMap<String, Object>();
@@ -81,7 +85,7 @@ public class TeachingTermEndpoint {
 			// Tight loop for fetching all entities from datastore and accomodate
 			// for lazy fetch.
 			for (TeachingTerm obj : execute);
-				
+
 		} finally {
 			mgr.close();
 		}
@@ -116,8 +120,8 @@ public class TeachingTermEndpoint {
 		if (currentSprint != null) currentSprint.getDeadline();
 		return currentSprint;
 	}
-	
-	
+
+
 	/**
 	 * This method gets the entity having primary key id. It uses HTTP GET method.
 	 *
@@ -131,11 +135,11 @@ public class TeachingTermEndpoint {
 		try {
 			teachingterm = mgr.getObjectById(TeachingTerm.class, id);
 			List<Sprint> sprints = teachingterm.getSprints();
-			
+
 			for (Sprint sprint : sprints) {
 				sprint.getDeadline();
 			}
-			
+
 		} finally {
 			mgr.close();
 		}
@@ -149,16 +153,16 @@ public class TeachingTermEndpoint {
 	 *
 	 * @param teachingterm the entity to be inserted.
 	 * @return The inserted entity.
-	 * @throws UnauthorizedException 
+	 * @throws UnauthorizedException
 	 */
 	@ApiMethod(name = "insertTeachingTerm",  scopes = {Constants.EMAIL_SCOPE},
-			clientIds = {Constants.WEB_CLIENT_ID, 
+			clientIds = {Constants.WEB_CLIENT_ID,
 		     com.google.api.server.spi.Constant.API_EXPLORER_CLIENT_ID},
 		     audiences = {Constants.WEB_CLIENT_ID})
 	public TeachingTerm insertTeachingTerm(TeachingTerm teachingterm, User user) throws UnauthorizedException {
-		
+
 		Authorization.restrictToAdmin(user);
-		
+
 		PersistenceManager mgr = getPersistenceManager();
 		try {
 			if (teachingterm.getId() != null && containsTeachingTerm(teachingterm)) {
@@ -178,16 +182,16 @@ public class TeachingTermEndpoint {
 	 *
 	 * @param teachingterm the entity to be updated.
 	 * @return The updated entity.
-	 * @throws UnauthorizedException 
+	 * @throws UnauthorizedException
 	 */
 	@ApiMethod(name = "updateTeachingTerm",  scopes = {Constants.EMAIL_SCOPE},
-			clientIds = {Constants.WEB_CLIENT_ID, 
+			clientIds = {Constants.WEB_CLIENT_ID,
 		     com.google.api.server.spi.Constant.API_EXPLORER_CLIENT_ID},
 		     audiences = {Constants.WEB_CLIENT_ID})
 	public TeachingTerm updateTeachingTerm(TeachingTerm teachingterm, User user) throws UnauthorizedException {
-		
+
 		Authorization.restrictToAdmin(user);
-		
+
 		PersistenceManager mgr = getPersistenceManager();
 		try {
 			if (!containsTeachingTerm(teachingterm)) {
@@ -199,15 +203,15 @@ public class TeachingTermEndpoint {
 		}
 		return teachingterm;
 	}
-	
+
 	@ApiMethod(name = "editTeachingTerm",  scopes = {Constants.EMAIL_SCOPE},
-			clientIds = {Constants.WEB_CLIENT_ID, 
+			clientIds = {Constants.WEB_CLIENT_ID,
 		     com.google.api.server.spi.Constant.API_EXPLORER_CLIENT_ID},
 		     audiences = {Constants.WEB_CLIENT_ID})
 	public TeachingTerm editTeachingTerm(@Named("id") Long id, @Named("label") String label, @Named("standupArchiveEmail") String emailArchive, User user) throws UnauthorizedException {
-		
+
 		Authorization.restrictToAdmin(user);
-		
+
 		PersistenceManager mgr = getPersistenceManager();
 		TeachingTerm teachingterm;
 		try {
@@ -220,15 +224,15 @@ public class TeachingTermEndpoint {
 		}
 		return teachingterm;
 	}
-	
+
 	@ApiMethod(name = "teachingTerm.setJoinable", scopes = {Constants.EMAIL_SCOPE},
-			clientIds = {Constants.WEB_CLIENT_ID, 
+			clientIds = {Constants.WEB_CLIENT_ID,
 		     com.google.api.server.spi.Constant.API_EXPLORER_CLIENT_ID},
 		     audiences = {Constants.WEB_CLIENT_ID})
 	public TeachingTerm setJoinable(@Named("id") Long id, @Named("joinable") Boolean joinable, User user) throws UnauthorizedException {
-		
+
 		Authorization.restrictToAdmin(user);
-		
+
 		PersistenceManager mgr = getPersistenceManager();
 		TeachingTerm teachingterm;
 		try {
@@ -246,30 +250,30 @@ public class TeachingTermEndpoint {
 	 * It uses HTTP DELETE method.
 	 *
 	 * @param id the primary key of the entity to be deleted.
-	 * @throws UnauthorizedException 
+	 * @throws UnauthorizedException
 	 */
 	@ApiMethod(name = "removeTeachingTerm",  scopes = {Constants.EMAIL_SCOPE},
-			clientIds = {Constants.WEB_CLIENT_ID, 
+			clientIds = {Constants.WEB_CLIENT_ID,
 		     com.google.api.server.spi.Constant.API_EXPLORER_CLIENT_ID},
 		     audiences = {Constants.WEB_CLIENT_ID})
 	public void removeTeachingTerm(@Named("id") Long id, User user) throws UnauthorizedException {
 		PersistenceManager mgr = getPersistenceManager();
 		try {
-			
+
 			Authorization.restrictToAdmin(user);
-			
+
 			TeachingTerm teachingterm = mgr.getObjectById(TeachingTerm.class, id);
-			
+
 			// Remove all projects within this teaching term
 			ProjectEndpoint pe = new ProjectEndpoint();
-			
+
 			List<Project> projects = pe.listProject(null, null, id, user);
-			
+
 			for (Project project : projects) {
 				pe.removeProject(project.getId(), user);
 			}
-			
-			
+
+
 			mgr.deletePersistent(teachingterm);
 		} finally {
 			mgr.close();

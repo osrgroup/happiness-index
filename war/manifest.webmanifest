@@ -1,0 +1,15 @@
+{
+	"background_color": "#efaa10",
+	"description": "Happiness Index for AMOS.",
+	"display": "fullscreen",
+	"icons": [
+	{
+	  "src": "assets/img/happy-icon.png",
+	  "sizes": "192x192",
+	  "type": "image/png"
+	}
+	],
+	"name": "Happiness Index",
+	"short_name": "Happiness",
+	"start_url": "/"
+}

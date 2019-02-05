@@ -13,29 +13,31 @@ import javax.jdo.annotations.PrimaryKey;
 @PersistenceCapable(identityType = IdentityType.APPLICATION)
 public class Project implements Serializable {
 	/**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = -8257815841457904953L;
 
 	@PrimaryKey
 	@Persistent(valueStrategy = IdGeneratorStrategy.IDENTITY)
 	Long id;
-	
+
 	@Persistent
 	String name;
-	
+
 	@Persistent
 	String description;
-	
+
 	@Persistent
 	Long teachingTerm;
-	
+
+	Boolean userJoined;
+
 	@Persistent
 	List<String> users;
-	
+
 	@Persistent
 	String managerID;
-	
+
 
 	public Long getId() {
 		return id;
@@ -43,6 +45,14 @@ public class Project implements Serializable {
 
 	public void setId(Long id) {
 		this.id = id;
+	}
+
+	public Boolean getUserJoined() {
+		return userJoined;
+	}
+
+	public void setUserJoined(Boolean userJoined) {
+		this.userJoined = userJoined;
 	}
 
 	public String getName() {
@@ -87,9 +97,10 @@ public class Project implements Serializable {
 
 	public void addUser(String userID){
 		if (users == null) users = new ArrayList<String>();
+		if (users.contains(userID)) return;
 		users.add(userID);
 	}
-	
+
 	public void removeUser(String userID){
 		if (users == null) users = new ArrayList<String>();
 		if (users.contains(userID)) users.remove(userID);

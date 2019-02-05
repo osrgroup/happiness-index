@@ -1,3 +1,7 @@
+body{
+	overflow: auto;
+}
+
 .main-content {
 	margin-top:70px;
 }
@@ -7,23 +11,51 @@
     padding-left:0;
 }
 
-/*
- * Row with equal height columns
- * --------------------------------------------------
- */
-.row-eq-height {
-  display: -webkit-box;
-  display: -webkit-flex;
-  display: -ms-flexbox;
-  display: flex;
-  flex-wrap: wrap;
+.small-gutter {
+    padding-left:3px !important;
+    padding-right:3px !important;
 }
 
-.row > [class*='col-'] {
-  display: flex;
-  flex-direction: column;
+.small-gutter-left {
+    padding-left:3px !important;
 }
 
-.adminBtn{
-	display: none;
+.small-gutter-right {
+    padding-right:3px !important;
 }
+
+.hoverHand:hover{
+	cursor: pointer;
+}
+
+.no-gutter{
+	padding-right:10px;
+    padding-left:10px;
+}
+
+.clickable:hover{
+	cursor: pointer;
+}
+
+.centerParent{
+    text-align: center;
+}
+
+.centerChild{
+	display: inline-block;
+	float: none;
+}
+
+.dropdownContainer {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdownContent {
+    display: none;
+    position: absolute;
+}
+
+.show {display:block;}
+
+.hide {display:none;}

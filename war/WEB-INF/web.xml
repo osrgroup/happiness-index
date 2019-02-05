@@ -2,10 +2,9 @@
 
   <!-- Servlets -->
 
-  
   <!-- Default page to serve -->
   <welcome-file-list>
-    <welcome-file>courses.html</welcome-file>
+    <welcome-file>index.jsp</welcome-file>
   </welcome-file-list>
 
   <servlet>
@@ -15,6 +14,7 @@
       <param-name>services</param-name>
       <param-value>com.unieins.happy.happiness.HapinessEndpoint,com.unieins.happy.project.ProjectEndpoint,com.unieins.happy.project.StandupEndpoint,com.unieins.happy.teaching.TeachingTermEndpoint,com.unieins.happy.user.UserEndpoint</param-value>
     </init-param>
+    <load-on-startup>1</load-on-startup>
   </servlet>
   
   <servlet>
@@ -26,15 +26,47 @@
     <servlet-name>EndpointsServlet</servlet-name>
     <url-pattern>/_ah/api/*</url-pattern>
   </servlet-mapping>
-  
-  <security-constraint>
-        <web-resource-collection>
-            <web-resource-name>uni1</web-resource-name>
-            <url-pattern>/*</url-pattern>
-        </web-resource-collection>
-        <user-data-constraint>
-            <transport-guarantee>CONFIDENTIAL</transport-guarantee>
-        </user-data-constraint>
-    </security-constraint>
+
+	<servlet>
+		<servlet-name>page</servlet-name>
+		<jsp-file>/index.jsp</jsp-file>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>page</servlet-name>
+		<url-pattern>/Projects</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>page</servlet-name>
+		<url-pattern>/Project</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>page</servlet-name>
+		<url-pattern>/Courses</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>page</servlet-name>
+		<url-pattern>/CourseConfig</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>page</servlet-name>
+		<url-pattern>/ProjectConfig</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>page</servlet-name>
+		<url-pattern>/Admin</url-pattern>
+	</servlet-mapping><servlet-mapping>
+		<servlet-name>page</servlet-name>
+		<url-pattern>/CourseArchive</url-pattern>
+	</servlet-mapping>
+	<security-constraint>
+		<web-resource-collection>
+			<web-resource-name>uni1</web-resource-name>
+			<url-pattern>/*</url-pattern>
+		</web-resource-collection>
+		<user-data-constraint>
+			<transport-guarantee>CONFIDENTIAL</transport-guarantee>
+		</user-data-constraint>
+	</security-constraint>
+
 
 </web-app>

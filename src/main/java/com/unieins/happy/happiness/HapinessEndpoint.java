@@ -45,14 +45,14 @@ public class HapinessEndpoint {
 	 */
 	@SuppressWarnings({ "unchecked", "unused" })
 	@ApiMethod(name = "listHapiness", path = "happinessStats",  scopes = {Constants.EMAIL_SCOPE},
-			clientIds = {Constants.WEB_CLIENT_ID, 
+			clientIds = {Constants.WEB_CLIENT_ID,
 		     com.google.api.server.spi.Constant.API_EXPLORER_CLIENT_ID},
 		     audiences = {Constants.WEB_CLIENT_ID})
 	public List<Hapiness> listHapiness(
 			@Nullable @Named("cursor") String cursorString,
 			@Nullable @Named("limit") Integer limit,
 			@Named("teachingTerm") Long teachingTerm,
-			@Nullable @Named("projectId") Long projectId, 
+			@Nullable @Named("projectId") Long projectId,
 			User user) {
 
 		PersistenceManager mgr = null;
@@ -72,12 +72,12 @@ public class HapinessEndpoint {
 			if (limit != null) {
 				query.setRange(0, limit);
 			}
-			
+
 			TeachingTermEndpoint tte = new TeachingTermEndpoint();
 			Sprint sprint = tte.getCurrentSprint(teachingTerm);
-			
+
 			String filterString = "";
-			
+
 			if (sprint != null){
 				Integer sprintNumber = sprint.getSprintNumber();
 				filterString += "sprint <= " + sprintNumber;
@@ -87,36 +87,36 @@ public class HapinessEndpoint {
 				if (filterString.length() > 0) filterString += " && ";
 				filterString += "projectId == " + projectId;
 			}
-			
+
 			if (filterString.length() > 0) {
 				query.setFilter(filterString);
 			}
-			
+
 
 			UserEndpoint ue = new UserEndpoint();
 			List<com.unieins.happy.user.User> projectMembers = ue.listUser(null, null, projectId, user);
-			
+
 			HashMap<String, String> userNames = new	HashMap<String,String>();
 			for (com.unieins.happy.user.User member : projectMembers) {
 				userNames.put(member.getId(), member.getGivenName() + " " + member.getSurName());
 			}
-			
+
 			execute = (List<Hapiness>) query.execute();
 			cursor = JDOCursorHelper.getCursor(execute);
 			if (cursor != null)
 				cursorString = cursor.toWebSafeString();
 
-			
+
 			for (Hapiness obj : execute){
 				// Set the correct current user name
 				if (userNames.get(obj.getUserId()) != null){
 					obj.setUserName(userNames.get(obj.getUserId()).toString());
 				}
-				
+
 			}
-			
+
 			happinessList = new ArrayList<Hapiness>();
-			
+
 			if (!Authorization.isUserAdmin(user)){
 				for (Hapiness hapiness : execute){
 					Hapiness copy = new Hapiness();
@@ -126,20 +126,65 @@ public class HapinessEndpoint {
 					copy.setSprint(hapiness.getSprint());
 					copy.setTeachingTermId(hapiness.getTeachingTermId());
 					copy.setUserId(hapiness.getUserId());
-					
+
 					copy.setUserName(hapiness.getUserId());
 					happinessList.add(copy);
 				}
-				
-				
+
+
 				return happinessList;
-					
+
 			}
 		} finally {
 			mgr.close();
 		}
-		
+
 		return execute;
+//
+//		return CollectionResponse.<Hapiness> builder().setItems(happinessList)
+//				.setNextPageToken(cursorString).build();
+	}
+
+	@SuppressWarnings({ "unchecked", "unused" })
+	@ApiMethod(name = "getCurrentHappiness", path = "currentHappiness",  scopes = {Constants.EMAIL_SCOPE},
+			clientIds = {Constants.WEB_CLIENT_ID,
+			 com.google.api.server.spi.Constant.API_EXPLORER_CLIENT_ID},
+			 audiences = {Constants.WEB_CLIENT_ID})
+	public Hapiness getCurrentHappiness(
+			@Nullable @Named("cursor") String cursorString,
+			@Nullable @Named("limit") Integer limit,
+			@Named("teachingTerm") Long teachingTerm,
+			@Named("projectId") Long projectId,
+			User user) {
+
+		PersistenceManager mgr = null;
+		Cursor cursor = null;
+		List<Hapiness> execute = null;
+		List<Hapiness> happinessList = null;
+		try {
+			mgr = getPersistenceManager();
+			Query query = mgr.newQuery(Hapiness.class);
+			if (cursorString != null && cursorString != "") {
+				cursor = Cursor.fromWebSafeString(cursorString);
+				HashMap<String, Object> extensionMap = new HashMap<String, Object>();
+				extensionMap.put(JDOCursorHelper.CURSOR_EXTENSION, cursor);
+				query.setExtensions(extensionMap);
+			}
+
+			if (limit != null) {
+				query.setRange(0, limit);
+			}
+
+			TeachingTermEndpoint tte = new TeachingTermEndpoint();
+			Sprint sprint = tte.getCurrentSprint(teachingTerm);
+
+			query.setFilter("sprint == "+ sprint.getSprintNumber() + " && projectId == " +projectId + " && userId == '"+user.getUserId()+"'");
+			execute = (List<Hapiness>) query.execute();
+
+			return execute.get(0);
+		} finally {
+			mgr.close();
+		}
 //
 //		return CollectionResponse.<Hapiness> builder().setItems(happinessList)
 //				.setNextPageToken(cursorString).build();
@@ -170,44 +215,44 @@ public class HapinessEndpoint {
 	 *
 	 * @param hapiness the entity to be inserted.
 	 * @return The inserted entity.
-	 * @throws UnauthorizedException 
+	 * @throws UnauthorizedException
 	 */
 	@ApiMethod(name = "insertHapiness",  scopes = {Constants.EMAIL_SCOPE},
-			clientIds = {Constants.WEB_CLIENT_ID, 
+			clientIds = {Constants.WEB_CLIENT_ID,
 		     com.google.api.server.spi.Constant.API_EXPLORER_CLIENT_ID},
 		     audiences = {Constants.WEB_CLIENT_ID})
-	public Hapiness insertHapiness(@Named("happiness") Integer hapinessValue,@Named("projectID") Long projectId, @Named("userName") String userName , User user) throws UnauthorizedException {
-		
+	public Hapiness insertHapiness(@Named("happiness") Integer hapinessValue,@Named("projectID") Long projectId, User user) throws UnauthorizedException {
+
 		PersistenceManager mgr = getPersistenceManager();
 		if (hapinessValue > 3) hapinessValue = 3;
 		if (hapinessValue < -3) hapinessValue = -3;
 		Project project = mgr.getObjectById(Project.class, projectId);
-		
+
 		Authorization.isUserProjectMember(user, project);
-		
+
 		//FIXME delete potentially existing data for this sprint and user
 		Hapiness hapiness = new Hapiness();
 		hapiness.setHappiness(hapinessValue);
 		hapiness.setDatetime(new java.util.Date());
 		hapiness.setUserId(user.getUserId());
-		
+
 		com.unieins.happy.user.User dbUser = (new UserEndpoint()).getCurrentUser(user);
 		hapiness.setUserName(dbUser.getGivenName() + " " +dbUser.getSurName());
 		hapiness.setProjectId(projectId);
 		TeachingTermEndpoint tte = new TeachingTermEndpoint();
-		
-		
-		
+
+		Sprint sprint = tte.getCurrentSprint(project.getTeachingTerm());
+		if (sprint == null) throw new EntityNotFoundException("NoCurrentSprintError");
 		Integer sprintNumber = tte.getCurrentSprint(project.getTeachingTerm()).getSprintNumber();
 		hapiness.setSprint(sprintNumber ); //FIXME Teachingterm ID nicht konstant 2
-		
+
 		try {
-			
+
 			Query query = mgr.newQuery(Hapiness.class);
 			query.setFilter("sprint == "+ sprintNumber + " && projectId == " +projectId + " && userId == '"+user.getUserId()+"'");
 			query.deletePersistentAll();
-		
-			
+
+
 			mgr.makePersistent(hapiness);
 		} finally {
 			mgr.close();
@@ -222,16 +267,16 @@ public class HapinessEndpoint {
 	 *
 	 * @param hapiness the entity to be updated.
 	 * @return The updated entity.
-	 * @throws UnauthorizedException 
+	 * @throws UnauthorizedException
 	 */
 	@ApiMethod(name = "updateHapiness",  scopes = {Constants.EMAIL_SCOPE},
-			clientIds = {Constants.WEB_CLIENT_ID, 
+			clientIds = {Constants.WEB_CLIENT_ID,
 		     com.google.api.server.spi.Constant.API_EXPLORER_CLIENT_ID},
 		     audiences = {Constants.WEB_CLIENT_ID})
 	public Hapiness updateHapiness(Hapiness hapiness, User user) throws UnauthorizedException {
-		
+
 		Authorization.restrictToAdmin(user);
-		
+
 		PersistenceManager mgr = getPersistenceManager();
 		try {
 			if (!containsHapiness(hapiness)) {
@@ -249,16 +294,16 @@ public class HapinessEndpoint {
 	 * It uses HTTP DELETE method.
 	 *
 	 * @param id the primary key of the entity to be deleted.
-	 * @throws UnauthorizedException 
+	 * @throws UnauthorizedException
 	 */
 	@ApiMethod(name = "removeHapiness",  scopes = {Constants.EMAIL_SCOPE},
-			clientIds = {Constants.WEB_CLIENT_ID, 
+			clientIds = {Constants.WEB_CLIENT_ID,
 		     com.google.api.server.spi.Constant.API_EXPLORER_CLIENT_ID},
 		     audiences = {Constants.WEB_CLIENT_ID})
 	public void removeHapiness(@Named("id") Long id, User user) throws UnauthorizedException {
 
 		Authorization.restrictToAdmin(user);
-		
+
 		PersistenceManager mgr = getPersistenceManager();
 		try {
 			Hapiness hapiness = mgr.getObjectById(Hapiness.class, id);

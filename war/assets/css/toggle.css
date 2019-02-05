@@ -1,8 +1,0 @@
-
-.toggle .toggle-off, .toggle.collapsed .toggle-on {
-	display: none;
-}
-
-.toggle.collapsed .toggle-off, .toggle .toggle-on {
-	display: inline-block;
-}

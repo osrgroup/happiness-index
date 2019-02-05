@@ -1,0 +1,6 @@
+indexes:
+
+- kind: Hapiness
+  properties:
+  - name: projectId
+  - name: sprint

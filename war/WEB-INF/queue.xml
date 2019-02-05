@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<queue-entries>
+<queue>
+	<name>default</name>
+	<rate>5/s</rate>
+</queue>
+<queue>
+	<name>ValidationResultQueue</name>
+	<rate>5/s</rate>
+</queue>
+<queue>
+	<name>ChangeLogQueue</name>
+	<rate>5/s</rate>
+</queue>
+<queue>
+	<name>DocumentResultQueue</name>
+	<rate>10/s</rate>
+</queue>
+<queue>
+	<name>DataMigrationQueue</name>
+	<rate>10/s</rate>
+	<retry-parameters>
+		<task-retry-limit>0</task-retry-limit>
+	</retry-parameters>
+</queue>
+<queue>
+	<name>PreloadQueue</name>
+	<rate>5/s</rate>
+	<retry-parameters>
+		<task-retry-limit>1</task-retry-limit>
+	</retry-parameters>
+</queue>
+</queue-entries>

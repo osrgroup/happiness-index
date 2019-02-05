@@ -5,4 +5,14 @@
     <description>Repopulate the cache every 5 minutes</description>
     <schedule>every 5 minutes</schedule>
   </cron>
+  <cron>
+    <url>/daily_events</url>
+    <description>Create DAILY_USER_LOGIN events for every user that was active this day</description>
+    <schedule>every day 00:00</schedule>
+  </cron>
+  <cron>
+    <url>/exercise_deadline_check</url>
+    <description>Check for exercises whose deadlines have passed and create snapshots of their exerciseProjects</description>
+    <schedule>every 5 minutes</schedule>
+  </cron>
 </cronentries>

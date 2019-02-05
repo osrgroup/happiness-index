@@ -5,6 +5,8 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.annotation.Nullable;
 import javax.inject.Named;
@@ -27,6 +29,8 @@ import com.google.appengine.api.datastore.Query.Filter;
 import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.Query.FilterPredicate;
 import com.google.appengine.datanucleus.query.JDOCursorHelper;
+import com.google.appengine.api.utils.SystemProperty;
+
 import com.unieins.happy.Cache;
 import com.unieins.happy.Constants;
 import com.unieins.happy.PMF;
@@ -49,7 +53,7 @@ public class UserEndpoint {
 	 */
 	@SuppressWarnings({ "unchecked", "unused" })
 	@ApiMethod(name = "listUser",  scopes = {Constants.EMAIL_SCOPE},
-			clientIds = {Constants.WEB_CLIENT_ID, 
+			clientIds = {Constants.WEB_CLIENT_ID,
 		     com.google.api.server.spi.Constant.API_EXPLORER_CLIENT_ID},
 		     audiences = {Constants.WEB_CLIENT_ID})
 	public List<User> listUser(
@@ -66,15 +70,15 @@ public class UserEndpoint {
 				com.google.appengine.api.datastore.Query q = new com.google.appengine.api.datastore.Query("User").setFilter(filter);
 
 				PreparedQuery pq = datastore.prepare(q);
-				
+
 				Calendar cal = Calendar.getInstance();
-				
+
 				Map<String, Integer> freq = new HashMap<String, Integer>();
 
 //				List<User> users = (List<User>)(List<?>)Lists.newArrayList(  pq.asIterable() );
-				
+
 				List<User> users = new ArrayList<User>();
-				
+
 				for (Entity result : pq.asIterable()) {
 					User dbUser = new User();
 					dbUser.setGivenName((String) result.getProperty("givenName"));
@@ -82,22 +86,22 @@ public class UserEndpoint {
 					dbUser.setProjects((List<Long>) result.getProperty("projects"));
 					dbUser.setId((String) result.getKey().getName());
 					dbUser.setEmail((String) result.getProperty("email"));
-					
+
 					users.add(dbUser);
 				}
-				
+
 				return users;
 	}
-	
+
 	@SuppressWarnings({ "unchecked", "unused" })
 	@ApiMethod(name = "listManager", path = "manager" ,  scopes = {Constants.EMAIL_SCOPE},
-			clientIds = {Constants.WEB_CLIENT_ID, 
+			clientIds = {Constants.WEB_CLIENT_ID,
 		     com.google.api.server.spi.Constant.API_EXPLORER_CLIENT_ID},
 		     audiences = {Constants.WEB_CLIENT_ID})
 	public CollectionResponse<User> listManager(
 			@Nullable @Named("cursor") String cursorString,
 			@Nullable @Named("limit") Integer limit, com.google.appengine.api.users.User user) throws UnauthorizedException {
-		
+
 		Authorization.restrictToAdmin(user);
 
 		PersistenceManager mgr = null;
@@ -117,9 +121,9 @@ public class UserEndpoint {
 			if (limit != null) {
 				query.setRange(0, limit);
 			}
-			
+
 			query.setFilter("type == 'MODERATOR'");
-			
+
 			execute = (List<User>) query.execute();
 			cursor = JDOCursorHelper.getCursor(execute);
 			if (cursor != null)
@@ -136,22 +140,22 @@ public class UserEndpoint {
 		return CollectionResponse.<User> builder().setItems(execute)
 				.setNextPageToken(cursorString).build();
 	}
-	
+
 	/**
 	 * This method gets the entity having primary key id. It uses HTTP GET method.
 	 *
 	 * @param id the primary key of the java bean.
 	 * @return The entity with primary key id.
-	 * @throws UnauthorizedException 
+	 * @throws UnauthorizedException
 	 */
 	@ApiMethod(name = "getUser", path = "getUser",  scopes = {Constants.EMAIL_SCOPE},
-			clientIds = {Constants.WEB_CLIENT_ID, 
+			clientIds = {Constants.WEB_CLIENT_ID,
 		     com.google.api.server.spi.Constant.API_EXPLORER_CLIENT_ID},
 		     audiences = {Constants.WEB_CLIENT_ID})
 	public User getUser(@Named("id") String id, com.google.appengine.api.users.User googleUser) throws UnauthorizedException {
-		
+
 		Authorization.restrictToAdmin(googleUser);
-		
+
 		PersistenceManager mgr = getPersistenceManager();
 		User user = null;
 		try {
@@ -162,17 +166,17 @@ public class UserEndpoint {
 		}
 		return user;
 	}
-	
-	
+
+
 	@SuppressWarnings({ "unchecked", "unused" })
 	@ApiMethod(name = "findUser", path = "userlist",  scopes = {Constants.EMAIL_SCOPE},
-			clientIds = {Constants.WEB_CLIENT_ID, 
+			clientIds = {Constants.WEB_CLIENT_ID,
 		     com.google.api.server.spi.Constant.API_EXPLORER_CLIENT_ID},
 		     audiences = {Constants.WEB_CLIENT_ID})
 	public CollectionResponse<User> findUser(
 			@Nullable @Named("cursor") String cursorString,
 			@Nullable @Named("limit") Integer limit, @Named("searchString") String searchString, com.google.appengine.api.users.User user) throws UnauthorizedException {
-		
+
 		Authorization.restrictToAdmin(user);
 
 		PersistenceManager mgr = null;
@@ -192,9 +196,9 @@ public class UserEndpoint {
 			if (limit != null) {
 				query.setRange(0, limit);
 			}
-			
+
 			query.setFilter("email == '"+searchString+"'");
-			
+
 			execute = (List<User>) query.execute();
 			cursor = JDOCursorHelper.getCursor(execute);
 			if (cursor != null)
@@ -219,7 +223,7 @@ public class UserEndpoint {
 	 * @return The entity with primary key id.
 	 */
 	@ApiMethod(name = "getCurrentUser",  scopes = {Constants.EMAIL_SCOPE},
-			clientIds = {Constants.WEB_CLIENT_ID, 
+			clientIds = {Constants.WEB_CLIENT_ID,
 		     com.google.api.server.spi.Constant.API_EXPLORER_CLIENT_ID},
 		     audiences = {Constants.WEB_CLIENT_ID})
 	public User getCurrentUser(com.google.appengine.api.users.User user) {
@@ -228,8 +232,8 @@ public class UserEndpoint {
 		try {
 			dbuser = (User) Cache.getOrLoad(user.getUserId(), com.unieins.happy.user.User.class);
 			// dbuser = mgr.getObjectById(User.class, user.getUserId());
-			
-			
+
+
 		} finally {
 			mgr.close();
 		}
@@ -244,14 +248,14 @@ public class UserEndpoint {
 	 *
 	 * @param user the entity to be inserted.
 	 * @return The inserted entity.
-	 * @throws UnauthorizedException 
+	 * @throws UnauthorizedException
 	 */
 	@ApiMethod(name = "insertUser",  scopes = {Constants.EMAIL_SCOPE},
-			clientIds = {Constants.WEB_CLIENT_ID, 
+			clientIds = {Constants.WEB_CLIENT_ID,
 		     com.google.api.server.spi.Constant.API_EXPLORER_CLIENT_ID},
 		     audiences = {Constants.WEB_CLIENT_ID})
 	public User insertUser(User dbuser, com.google.appengine.api.users.User user) throws UnauthorizedException {
-		
+
 		PersistenceManager mgr = getPersistenceManager();
 		dbuser.setId(user.getUserId());
 		dbuser.setType(UserType.USER);
@@ -275,16 +279,16 @@ public class UserEndpoint {
 	 *
 	 * @param user the entity to be updated.
 	 * @return The updated entity.
-	 * @throws UnauthorizedException 
+	 * @throws UnauthorizedException
 	 */
 	@ApiMethod(name = "updateUser",  scopes = {Constants.EMAIL_SCOPE},
-			clientIds = {Constants.WEB_CLIENT_ID, 
+			clientIds = {Constants.WEB_CLIENT_ID,
 		     com.google.api.server.spi.Constant.API_EXPLORER_CLIENT_ID},
 		     audiences = {Constants.WEB_CLIENT_ID})
 	public User updateUser(User user, com.google.appengine.api.users.User googleUser) throws UnauthorizedException {
-		
+
 		Authorization.restrictToAdmin(googleUser);
-		
+
 		PersistenceManager mgr = getPersistenceManager();
 		try {
 			if (!containsUser(user)) {
@@ -297,15 +301,56 @@ public class UserEndpoint {
 		}
 		return user;
 	}
-	
-	
+
+	@ApiMethod(name = "updateUserType",  scopes = {Constants.EMAIL_SCOPE},
+			clientIds = {Constants.WEB_CLIENT_ID,
+		     com.google.api.server.spi.Constant.API_EXPLORER_CLIENT_ID},
+		     audiences = {Constants.WEB_CLIENT_ID})
+	public User updateUserType(@Named("id") String id, @Named("type") String type, com.google.appengine.api.users.User loggedInUser) throws UnauthorizedException {
+		PersistenceManager mgr = getPersistenceManager();
+		User user = null;
+		try {
+
+			user = (User) Cache.getOrLoad(id, User.class);
+
+			// only admins are allowed to trigger this endpoint
+			if(!Authorization.isUserAdmin(loggedInUser)) {
+				if (SystemProperty.environment.value().equals(SystemProperty.Environment.Value.Development)) {
+					// in dev environmanet everyone may use this endpoint.
+					Logger.getLogger("logger").log(Level.INFO, "UpdateUserType called by non-admin user. Allowed because Dev Environment!");
+				} else {
+					throw new UnauthorizedException("Only Admins are allowed.");
+				}
+			}
+
+			switch (type) {
+				case "ADMIN":
+					user.setType(UserType.ADMIN);
+					break;
+				case "USER":
+					user.setType(UserType.USER);
+					break;
+				default:
+					break;
+			}
+
+			mgr.makePersistent(user);
+			Cache.cache(id, User.class, user);
+
+		} finally {
+			mgr.close();
+		}
+		return user;
+	}
+
+
 	@ApiMethod(name = "setDefaultTeachingTerm",  scopes = {Constants.EMAIL_SCOPE},
-			clientIds = {Constants.WEB_CLIENT_ID, 
+			clientIds = {Constants.WEB_CLIENT_ID,
 		     com.google.api.server.spi.Constant.API_EXPLORER_CLIENT_ID},
 		     audiences = {Constants.WEB_CLIENT_ID})
 	public User setDefaultTeachingTerm(@Named("defaultTeachingTerm") Long defaultTeachingTerm, com.google.appengine.api.users.User user) throws UnauthorizedException {
 		PersistenceManager mgr = getPersistenceManager();
-		
+
 		com.unieins.happy.user.User dbuser = null;
 		try {
 			// dbuser = mgr.getObjectById(User.class, user.getUserId());
@@ -324,16 +369,16 @@ public class UserEndpoint {
 	 * It uses HTTP DELETE method.
 	 *
 	 * @param id the primary key of the entity to be deleted.
-	 * @throws UnauthorizedException 
+	 * @throws UnauthorizedException
 	 */
 	@ApiMethod(name = "removeUser",  scopes = {Constants.EMAIL_SCOPE},
-			clientIds = {Constants.WEB_CLIENT_ID, 
+			clientIds = {Constants.WEB_CLIENT_ID,
 		     com.google.api.server.spi.Constant.API_EXPLORER_CLIENT_ID},
 		     audiences = {Constants.WEB_CLIENT_ID})
 	public void removeUser(@Named("id") String id, com.google.appengine.api.users.User googleUser) throws UnauthorizedException {
-		
+
 		Authorization.restrictToAdmin(googleUser);
-		
+
 		PersistenceManager mgr = getPersistenceManager();
 		try {
 			// User user = mgr.getObjectById(User.class, id);

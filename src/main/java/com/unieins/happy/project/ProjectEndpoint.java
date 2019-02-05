@@ -53,17 +53,17 @@ public class ProjectEndpoint {
 	 *
 	 * @return A CollectionResponse class containing the list of all entities
 	 * persisted and a cursor to the next page.
-	 * @throws UnauthorizedException 
+	 * @throws UnauthorizedException
 	 */
 	@SuppressWarnings({ "unchecked", "unused" })
 	@ApiMethod(name = "listProject" , path = "projectList",  scopes = {Constants.EMAIL_SCOPE},
-			clientIds = {Constants.WEB_CLIENT_ID, 
+			clientIds = {Constants.WEB_CLIENT_ID,
 		     com.google.api.server.spi.Constant.API_EXPLORER_CLIENT_ID},
 		     audiences = {Constants.WEB_CLIENT_ID})
 	public List<Project> listProject(
 			@Nullable @Named("cursor") String cursorString,
 			@Nullable @Named("limit") Integer limit,
-			@Named("teachingTerm") Long teachingTerm, 
+			@Named("teachingTerm") Long teachingTerm,
 			User user) throws UnauthorizedException {
 
 		String keyString = KeyFactory.createKeyString("ProjectList", teachingTerm);
@@ -113,13 +113,22 @@ public class ProjectEndpoint {
 	 * @param id the primary key of the java bean.
 	 * @return The entity with primary key id.
 	 */
-	@ApiMethod(name = "getProject")
-	public Project getProject(@Named("id") Long id) {
+	@ApiMethod(name = "getProject",  scopes = {Constants.EMAIL_SCOPE},
+			clientIds = {Constants.WEB_CLIENT_ID,
+		     com.google.api.server.spi.Constant.API_EXPLORER_CLIENT_ID},
+		     audiences = {Constants.WEB_CLIENT_ID})
+	public Project getProject(@Named("id") Long id, User user ) {
 		PersistenceManager mgr = getPersistenceManager();
 		Project project = null;
 		try {
 			project = mgr.getObjectById(Project.class, id);
-			project.getUsers();
+			project.setUserJoined(false);
+			List<String> users = project.getUsers();
+			if (users != null){
+				for (String projectUser : users){
+					if (projectUser.equals(user.getUserId())) project.setUserJoined(true);
+				}
+			}
 		} finally {
 			mgr.close();
 		}
@@ -133,16 +142,16 @@ public class ProjectEndpoint {
 	 *
 	 * @param project the entity to be inserted.
 	 * @return The inserted entity.
-	 * @throws UnauthorizedException 
+	 * @throws UnauthorizedException
 	 */
 	@ApiMethod(name = "insertProject",  scopes = {Constants.EMAIL_SCOPE},
-			clientIds = {Constants.WEB_CLIENT_ID, 
+			clientIds = {Constants.WEB_CLIENT_ID,
 		     com.google.api.server.spi.Constant.API_EXPLORER_CLIENT_ID},
 		     audiences = {Constants.WEB_CLIENT_ID})
 	public Project insertProject(Project project, User user ) throws UnauthorizedException {
-		
+
 		Authorization.restrictToAdmin(user);
-		
+
 		PersistenceManager mgr = getPersistenceManager();
 		try {
 			if ((project.getId() != null) && containsProject(project)) {
@@ -164,16 +173,16 @@ public class ProjectEndpoint {
 	 *
 	 * @param project the entity to be updated.
 	 * @return The updated entity.
-	 * @throws UnauthorizedException 
+	 * @throws UnauthorizedException
 	 */
 	@ApiMethod(name = "updateProject",  scopes = {Constants.EMAIL_SCOPE},
-			clientIds = {Constants.WEB_CLIENT_ID, 
+			clientIds = {Constants.WEB_CLIENT_ID,
 		     com.google.api.server.spi.Constant.API_EXPLORER_CLIENT_ID},
 		     audiences = {Constants.WEB_CLIENT_ID})
 	public Project updateProject(Project project, User user ) throws UnauthorizedException {
-		
+
 		Authorization.restrictToAdmin(user);
-		
+
 		PersistenceManager mgr = getPersistenceManager();
 		try {
 			if (!containsProject(project)) {
@@ -194,20 +203,20 @@ public class ProjectEndpoint {
 	 * It uses HTTP DELETE method.
 	 *
 	 * @param id the primary key of the entity to be deleted.
-	 * @throws UnauthorizedException 
+	 * @throws UnauthorizedException
 	 */
 	@ApiMethod(name = "removeProject",  scopes = {Constants.EMAIL_SCOPE},
-			clientIds = {Constants.WEB_CLIENT_ID, 
+			clientIds = {Constants.WEB_CLIENT_ID,
 		     com.google.api.server.spi.Constant.API_EXPLORER_CLIENT_ID},
 		     audiences = {Constants.WEB_CLIENT_ID})
 	public void removeProject(@Named("id") Long id, User user) throws UnauthorizedException {
-		
+
 		Authorization.restrictToAdmin(user);
-		
+
 		PersistenceManager mgr = getPersistenceManager();
 		try {
 			Project project = mgr.getObjectById(Project.class, id);
-			
+
 			// remove all happiness data for this project
 			Query query = mgr.newQuery(Hapiness.class);
 			HapinessEndpoint he = new HapinessEndpoint();
@@ -215,7 +224,7 @@ public class ProjectEndpoint {
 			for (Hapiness happiness : happinessList) {
 				he.removeHapiness(happiness.getId(), user);
 			}
-			
+
 			//remove project from users list of projects
 			List<String> memberList = project.getUsers();
 			if (memberList != null){
@@ -227,28 +236,29 @@ public class ProjectEndpoint {
 
 				}
 			}
-			
-			
+
 			// remove actual project
-			mgr.deletePersistent(project);
 			String keyString = KeyFactory.createKeyString("ProjectList", project.getTeachingTerm());
+			Logger.getLogger("logger").log(Level.INFO, "Invalidating " +  keyString);
+
+			mgr.deletePersistent(project);
 			Cache.invalidate(keyString);
 		} finally {
 			mgr.close();
 		}
 	}
-	
+
 	@ApiMethod(name = "joinProject",  scopes = {Constants.EMAIL_SCOPE},
-			clientIds = {Constants.WEB_CLIENT_ID, 
+			clientIds = {Constants.WEB_CLIENT_ID,
 		     com.google.api.server.spi.Constant.API_EXPLORER_CLIENT_ID},
 		     audiences = {Constants.WEB_CLIENT_ID})
 	public void joinProject(@Named("id") Long id, User user) throws UnauthorizedException{
 		PersistenceManager mgr = getPersistenceManager();
 
 		Project project = mgr.getObjectById(Project.class, id);
-		
+
 		TeachingTerm term = mgr.getObjectById(TeachingTerm.class, project.getTeachingTerm());
-		
+
 		if (term.getJoinable()){
 			com.unieins.happy.user.User dbuser = mgr.getObjectById(com.unieins.happy.user.User.class, user.getUserId());
 			dbuser.addProjectAuthorization(project.getId());
@@ -260,20 +270,22 @@ public class ProjectEndpoint {
 			throw new UnauthorizedException("Project not open for new users");
 		}
 	}
-	
+
 	@ApiMethod(name = "leaveProject",  scopes = {Constants.EMAIL_SCOPE},
-			clientIds = {Constants.WEB_CLIENT_ID, 
+			clientIds = {Constants.WEB_CLIENT_ID,
 		     com.google.api.server.spi.Constant.API_EXPLORER_CLIENT_ID},
 		     audiences = {Constants.WEB_CLIENT_ID})
-	public void leaveProject(@Named("projectID") Long projectID, @Named("userID") String userID, User user) throws UnauthorizedException{
-		
-		Authorization.restrictToAdmin(user);
-		
+	public void leaveProject(@Named("projectID") Long projectID, @Nullable  @Named("userID") String userID, User user) throws UnauthorizedException{
+		if (userID != null){
+			Authorization.restrictToAdmin(user);
+		} else {
+			userID = user.getUserId();
+		}
 		PersistenceManager mgr = getPersistenceManager();
 		try {
 			Project project = mgr.getObjectById(Project.class, projectID);
 			com.unieins.happy.user.User dbuser = mgr.getObjectById(com.unieins.happy.user.User.class, userID);
-			
+
 			project.removeUser(userID);
 			dbuser.removeProjectAuthorization(projectID);
 
@@ -284,24 +296,25 @@ public class ProjectEndpoint {
 			mgr.close();
 		}
 	}
-	
+
+
 	@ApiMethod(name = "sendTeamEmail",  scopes = {Constants.EMAIL_SCOPE},
-			clientIds = {Constants.WEB_CLIENT_ID, 
+			clientIds = {Constants.WEB_CLIENT_ID,
 		     com.google.api.server.spi.Constant.API_EXPLORER_CLIENT_ID},
 		     audiences = {Constants.WEB_CLIENT_ID})
 public void sendTeamEmail( @Named("subject") String subject, @Named("message") String message,  @Named("projectID") Long projectID, User user) throws UnsupportedEncodingException, MessagingException, JSONException{
-		
+
 		Properties props = new Properties();
 		Session session = Session.getDefaultInstance(props, null);
 
-		
+
 		Sendgrid mail = new Sendgrid(Credentials.SENDGRID_USER ,Credentials.SENDGRID_PW);
-		
+
 		 // FIXME project number
 		mail.setFrom(user.getEmail()).setSubject(subject).setText(" ").setHtml(message);
 
 		List<com.unieins.happy.user.User> userList = getProjectMembers(projectID, user);
-		
+
 		for (com.unieins.happy.user.User projectMember : userList) {
 			Logger.getLogger("logger").log(Level.WARNING, "adding " +  projectMember.getEmail());
 			String fullName = projectMember.getGivenName() + " " + projectMember.getSurName();
